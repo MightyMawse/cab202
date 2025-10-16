@@ -5,14 +5,14 @@
 
 void init_clock(){
     cli();
-    TCB0.CCMP = 52083;
-    TCB0.CTRLB = TCB_CNTMODE_INT_gc;
-    TCB0.INTCTRL = TCB_CAPT_bm;
-    TCB0.CTRLA = TCB_ENABLE_bm;
+    TCB1.CTRLB = TCB_CNTMODE_INT_gc; // Configure TCB1 in periodic interrupt mode
+    TCB1.CCMP = 16667;               // Set interval for 5 ms (16667 clocks @ 3.333 MHz)
+    TCB1.INTCTRL = TCB_CAPT_bm;      // CAPT interrupt enable
+    TCB1.CTRLA = TCB_ENABLE_bm;      // Enable
     sei();
 }
 
-ISR(TCB0_INT_vect)
+ISR(TCB1_INT_vect)
 {
     static uint8_t current_side = 0;
     if (current_side) {
