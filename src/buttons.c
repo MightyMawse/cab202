@@ -1,6 +1,7 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <buttons.h>
+#include "display.h"
 
 #define MAX_COUNT 5
 #define PB_NUM 4
