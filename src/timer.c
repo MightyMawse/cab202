@@ -8,7 +8,7 @@ void init_clock(){
     TCB1.CTRLB = TCB_CNTMODE_INT_gc; // Configure TCB1 in periodic interrupt mode
     TCB1.CCMP = 16667;               // Set interval for 5 ms (16667 clocks @ 3.333 MHz)
     TCB1.INTCTRL = TCB_CAPT_bm;      // CAPT interrupt enable
-    TCB1.CTRLA = TCB_ENABLE_bm;      // Enable
+    TCB1.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_DIV2_gc;      // Enable
     sei();
 }
 
