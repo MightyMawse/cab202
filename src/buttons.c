@@ -36,6 +36,7 @@ void init_buttons(){
 /*
     PB (1-4) Interrupt service routine
 */
+/*
 ISR(PORTA_PORT_vect){
     static uint8_t counters[PB_NUM] = {0, 0, 0, 0}; // Array of counters for each button
 
@@ -63,3 +64,4 @@ ISR(PORTA_PORT_vect){
         }
     }
 }
+*/

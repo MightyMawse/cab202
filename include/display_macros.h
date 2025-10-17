@@ -16,6 +16,7 @@
 #define DISP_OFF 0b01111111
 #define DISP_DASH DISP_SEG_G
 
-#define DISP_LHS (1 << 7)
+#define DISP_LHS 0b10000000
+//(1 << 7)
 
 #endif

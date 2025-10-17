@@ -22,8 +22,9 @@ int main(void)
     init_spi(); // Init spi
     init_clock(); // Init program clock
 
-    update_display(seven, seven);
     sei();
+
+    update_display(six, seven);
 
     //state_machine();
 
