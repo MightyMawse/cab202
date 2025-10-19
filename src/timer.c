@@ -1,5 +1,7 @@
 #include "timer.h"
 #include "display.h"
+#include "buttons.h"
+#include "display_macros.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -22,6 +24,9 @@ ISR(TCB1_INT_vect)
         SPI0.DATA = right_byte;
     }
     current_side = !current_side;
+
+    debounce(); // Debounce pushbuttons on clock
+    clocked_input_handler(); // Clock dependant input handler
 
     TCB1.INTFLAGS = TCB_CAPT_bm;
 }

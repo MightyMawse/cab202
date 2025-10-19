@@ -4,6 +4,7 @@
 #include "display.h"
 #include "display_macros.h"
 #include "buzzer.h"
+#include "buttons.h"
 
 void state_machine(void);
 void test_display_column();
@@ -20,18 +21,12 @@ int main(void)
 
     // Call your initialisation functions here
 
-    //init_buttons(); // Init push buttons
     init_spi(); // Init spi
     init_clock(); // Init program clock
     init_buzzer();
+    init_buttons(); // Init push buttons
 
     sei();
-
-    update_display(DISP_DASH, DISP_DASH);
-    //emit_frequency(0);
-    stop_tone();
-
-    //state_machine();
 
     // The program should not reach this point
     while (1)
