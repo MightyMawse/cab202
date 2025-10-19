@@ -16,6 +16,7 @@ void init_clock(){
 
 ISR(TCB1_INT_vect)
 {
+    // Flip flop displays
     static uint8_t current_side = 0;
     if (current_side) {
         SPI0.DATA = left_byte;
@@ -23,6 +24,7 @@ ISR(TCB1_INT_vect)
     else {
         SPI0.DATA = right_byte;
     }
+
     current_side = !current_side;
 
     debounce(); // Debounce pushbuttons on clock

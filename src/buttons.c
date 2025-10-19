@@ -72,16 +72,25 @@ void debounce(){
 void clocked_input_handler(){
     if(!pb1_state){
         update_display(DISP_BAR_LEFT, DISP_OFF);
+        buzzer_emit(0);
     }
-    if(!pb2_state){
+    else if(!pb2_state){
         update_display(DISP_BAR_RIGHT, DISP_OFF);
+        buzzer_emit(1);
     }
-    if(!pb3_state){
+    else if(!pb3_state){
         update_display(DISP_OFF, DISP_BAR_LEFT);
+        buzzer_emit(2);
     }
-    if(!pb4_state){
+    else if(!pb4_state){
         update_display(DISP_OFF, DISP_BAR_RIGHT);
+        buzzer_emit(3);
     }
+    else{
+        update_display(DISP_OFF, DISP_OFF);
+        buzzer_stop();
+    }
+
 }
 
 /*

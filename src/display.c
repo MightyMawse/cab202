@@ -30,10 +30,13 @@ void init_spi(void) {
 ISR(SPI0_INT_vect) {
     PORTA.OUTCLR = PIN1_bm;
     PORTA.OUTSET = PIN1_bm;
-    //uint8_t dummy = SPI0.DATA;  // clears the flag properly
     SPI0.INTFLAGS = SPI_IF_bm;
 }
 
+/*
+    update_display()
+    Set the bytes to be loaded into SPI.DATA
+*/
 void update_display(const uint8_t left, const uint8_t right)
 {
     left_byte = (left | DISP_LHS);

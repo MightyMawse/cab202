@@ -3,8 +3,13 @@
 
 #include <stdint.h>
 
+#define E_HIGH_PER 4939
+#define CS_PER 5893
+#define A_PER 3708
+#define E_LOW_PER 8333
+
 void init_buzzer();
-void emit_frequency(uint8_t tone);
-void stop_tone(void);
+void buzzer_emit(uint8_t index);
+void buzzer_stop(void);
 
 #endif
