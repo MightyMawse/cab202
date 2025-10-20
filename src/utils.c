@@ -5,6 +5,19 @@
 
 static uint32_t state_lfsr;
 
+/*
+    button_index()
+    Find button pushed index
+*/
+uint8_t button_index(uint8_t bp_bm){
+    for(uint8_t i = 0; i < sizeof(bp_bm); i++){
+        if((bp_bm << i) == 0){
+            return (i - 4);
+        }
+    }
+    return 0;
+}
+
 void lfsr_seed(uint32_t seed){
     state_lfsr = seed;
 }

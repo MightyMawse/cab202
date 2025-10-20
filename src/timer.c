@@ -8,9 +8,15 @@
 #include <avr/interrupt.h>
 
 uint32_t elapsed_time;
-BOOL enable_outputs = TRUE;
-BOOL enable_elapse_time = FALSE; 
+bool_t enable_outputs = TRUE;
+bool_t enable_elapse_time = FALSE;
+bool_t enable_elapse_clock = FALSE;
+uint16_t playback_delay = 250; // 250ms playback delay NOTE: Change later for POT
 
+/*
+    init_clock()
+    Initialise the clock
+*/
 void init_clock(void){
     cli();
     TCB1.CTRLB = TCB_CNTMODE_INT_gc; // Configure TCB1 in periodic interrupt mode
@@ -21,24 +27,22 @@ void init_clock(void){
 }
 
 /*
-    clocked_outputs()
-    Drives the outputs that are clock depedant
+    toggle_elapse()
+    toggle the elapse time counter
 */
-void clocked_outputs(void){
-    if(enable_outputs){
-        
-    }
+void toggle_elapse(bool_t b){
+    enable_elapse_clock = b;
 }
 
 ISR(TCB1_INT_vect)
 {
-    elapsed_time += 5; // Increment by 5ms
+    if(enable_elapse_clock == TRUE){
+        elapsed_time += 5; // Increment by 5ms
+    }
 
     multiplex_displays(); // Drive displays
     debounce(); // Debounce pushbuttons on clock
-    clocked_input_handler(); // Clock dependant input handler
-
-    if(enable_outputs){ clocked_outputs(); } // Clock dependant outputs (simons turn)
+    //clocked_input_handler(); // Clock dependant input handler
 
     TCB1.INTFLAGS = TCB_CAPT_bm;
 }

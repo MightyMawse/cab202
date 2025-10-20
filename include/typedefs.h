@@ -6,7 +6,7 @@
 typedef enum{
     TRUE = 1,
     FALSE = 0
-} BOOL;
+} bool_t;
 
 typedef enum {
     GENERATE,

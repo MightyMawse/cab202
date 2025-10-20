@@ -1,5 +1,7 @@
 #include "display.h"
 #include "display_macros.h"
+#include "buzzer.h"
+#include "typedefs.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 

@@ -4,9 +4,9 @@
 #include "typedefs.h"
 
 void init_clock(void);
-void clocked_outputs(void);
+void toggle_elapse(bool_t b);
 
 extern uint32_t elapsed_time;
-extern BOOL enable_outputs;
+extern uint16_t playback_delay;
 
 #endif

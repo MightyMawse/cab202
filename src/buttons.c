@@ -12,6 +12,9 @@ uint8_t pb1_state = 0xFF;
 uint8_t pb2_state = 0xFF;
 uint8_t pb3_state = 0xFF;
 uint8_t pb4_state = 0xFF;
+uint8_t pb_falling_edge = 0xFF;
+uint8_t pb_rising_edge = 0xFF;
+uint8_t pb_bm = 0xFF;
 
 // State referene array
 uint8_t* p_state[4] = {
@@ -41,6 +44,10 @@ void init_buttons(void){
 */
 void debounce(void){
     static uint8_t counters[PB_NUM] = {0, 0, 0, 0}; // Array of counters for each button
+
+    pb_bm = (pb1_state & pb2_state & pb3_state & pb4_state);
+    pb_falling_edge = (VPORTA.IN) & ~pb_bm;
+    pb_rising_edge = ~(VPORTA.IN) & pb_bm;
 
     uint8_t pb_samples[4] = {
         (VPORTA.IN & PIN4_bm),
