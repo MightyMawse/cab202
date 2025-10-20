@@ -23,7 +23,7 @@ uint8_t* p_state[4] = {
     init_buttons()
     Enable pull up resistors, set interrupts
 */
-void init_buttons(){
+void init_buttons(void){
     cli();
 
     // Enable pull-up in S1, S2, S3, S4
@@ -35,8 +35,11 @@ void init_buttons(){
     sei();
 }
 
-
-void debounce(){
+/*
+    debounce()
+    Debounces inputs on clock
+*/
+void debounce(void){
     static uint8_t counters[PB_NUM] = {0, 0, 0, 0}; // Array of counters for each button
 
     uint8_t pb_samples[4] = {
@@ -69,7 +72,7 @@ void debounce(){
     clocked_input_handler()
     Clock driven input handler for pushbuttons
 */
-void clocked_input_handler(){
+void clocked_input_handler(void){
     if(!pb1_state){
         update_display(DISP_BAR_LEFT, DISP_OFF);
         buzzer_emit(0);

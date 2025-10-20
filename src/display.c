@@ -8,6 +8,16 @@
 volatile uint8_t left_byte = DISP_OFF | DISP_LHS;
 volatile uint8_t right_byte = DISP_OFF;
 
+ISR(SPI0_INT_vect) {
+    PORTA.OUTCLR = PIN1_bm;
+    PORTA.OUTSET = PIN1_bm;
+    SPI0.INTFLAGS = SPI_IF_bm;
+}
+
+/*
+    init_spi()
+    Initialise SPI
+*/
 void init_spi(void) {
     // Route SPI to correct pins
     PORTMUX.SPIROUTEA = PORTMUX_SPI0_ALT1_gc;
@@ -27,10 +37,20 @@ void init_spi(void) {
     SPI0.CTRLA |= SPI_ENABLE_bm; // enable SPI
 }
 
-ISR(SPI0_INT_vect) {
-    PORTA.OUTCLR = PIN1_bm;
-    PORTA.OUTSET = PIN1_bm;
-    SPI0.INTFLAGS = SPI_IF_bm;
+/*
+    multiplex_display()
+    Alternate displays at high frequency
+*/
+void multiplex_displays(void){
+    static uint8_t current_side = 0;
+    if (current_side) {
+        SPI0.DATA = left_byte;
+    }
+    else {
+        SPI0.DATA = right_byte;
+    }
+
+    current_side = !current_side;
 }
 
 /*

@@ -1,11 +1,17 @@
 #include "timer.h"
 #include "display.h"
 #include "buttons.h"
+#include "utils.h"
 #include "display_macros.h"
+#include "typedefs.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-void init_clock(){
+uint32_t elapsed_time;
+BOOL enable_outputs = TRUE;
+BOOL enable_elapse_time = FALSE; 
+
+void init_clock(void){
     cli();
     TCB1.CTRLB = TCB_CNTMODE_INT_gc; // Configure TCB1 in periodic interrupt mode
     TCB1.CCMP = 16667;               // Set interval for 5 ms (16667 clocks @ 3.333 MHz)
@@ -14,21 +20,25 @@ void init_clock(){
     sei();
 }
 
+/*
+    clocked_outputs()
+    Drives the outputs that are clock depedant
+*/
+void clocked_outputs(void){
+    if(enable_outputs){
+        
+    }
+}
+
 ISR(TCB1_INT_vect)
 {
-    // Flip flop displays
-    static uint8_t current_side = 0;
-    if (current_side) {
-        SPI0.DATA = left_byte;
-    }
-    else {
-        SPI0.DATA = right_byte;
-    }
+    elapsed_time += 5; // Increment by 5ms
 
-    current_side = !current_side;
-
+    multiplex_displays(); // Drive displays
     debounce(); // Debounce pushbuttons on clock
     clocked_input_handler(); // Clock dependant input handler
+
+    if(enable_outputs){ clocked_outputs(); } // Clock dependant outputs (simons turn)
 
     TCB1.INTFLAGS = TCB_CAPT_bm;
 }
