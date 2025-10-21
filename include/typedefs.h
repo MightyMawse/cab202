@@ -15,7 +15,9 @@ typedef enum {
     INPUT_RECEIVED,
     INPUT_EVALUATE,
     DISPLAY_SUCCESS,
-    DISPLAY_FAILURE
+    DISPLAY_FAILURE,
+    DISPLAY_SCORE,
+    SCORE_TABLE
 } state_t;
 
 #endif

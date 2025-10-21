@@ -27,6 +27,8 @@ static state_t state = GENERATE;
 static bool_t enable_output = FALSE;
 static uint8_t sequence_counter = 1; // Keep track of how far through the sequence we are
 static uint8_t input = 0;
+static uint8_t score = 0;
+static uint8_t high_score = 0;
 
 int main(void)
 {
@@ -199,14 +201,42 @@ void state_machine(void)
 
                 elapsed_time = 0;
                 sequence_length++;
+                score++;
                 state = GENERATE;
             }
             break;
         case DISPLAY_FAILURE:
             if(elapsed_time >= playback_delay){
-                toggle_output(FALSE); // Turn off
-                toggle_elapse(FALSE);
+                if(score > high_score){
+                    high_score = score;
 
+                    // Display score (no buzz)
+                    uint8_t t, o;
+                    get_segment_bits(high_score, &t, &o);
+                    update_display(t, o);
+
+                    elapsed_time = 0; // Reset elapsed time but dont disable it, for the score display
+                    state = DISPLAY_SCORE;
+                }
+                else{
+                    toggle_output(FALSE); // Turn off
+                    toggle_elapse(FALSE);
+                    state = GENERATE;
+                }
+                
+                score = 0; // Reset score
+            }
+            break;
+        case DISPLAY_SCORE:
+            if(elapsed_time >= playback_delay){
+                toggle_output(FALSE);
+                elapsed_time = 0; // Again, reset time but dont disable
+                state = SCORE_TABLE;
+            }
+            break;
+        case SCORE_TABLE:
+            if(elapsed_time >= score_board_delay){ // Wait 5s for score board
+                toggle_elapse(FALSE);
                 elapsed_time = 0;
                 state = GENERATE;
             }
