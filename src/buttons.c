@@ -8,19 +8,34 @@
 #define MAX_COUNT 10
 #define PB_NUM 4
 
+/*
 uint8_t pb1_state = 0xFF;
 uint8_t pb2_state = 0xFF;
 uint8_t pb3_state = 0xFF;
 uint8_t pb4_state = 0xFF;
-uint8_t pb_falling_edge = 0xFF;
-uint8_t pb_rising_edge = 0xFF;
+uint8_t pb_falling_edge = 0x00;
+uint8_t pb_rising_edge = 0x00;
 uint8_t pb_bm = 0xFF;
+
+uint8_t current = 0xFF;
+uint8_t prev = 0xFF;
 
 // State referene array
 uint8_t* p_state[4] = {
     &pb1_state, &pb2_state, 
     &pb3_state, &pb4_state
 };
+
+*/
+
+#define PB_MASK    (PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm)
+
+static uint8_t pb_previous_state = 0xFF;   // last debounced snapshot
+static uint8_t pb_current_state  = 0xFF;   // current debounced snapshot
+static uint8_t pb_debounced_state = 0xFF;  // working copy during debounce
+uint8_t pb_falling_edge = 0x00;     // press (1→0)
+uint8_t pb_rising_edge  = 0x00;     // release (0→1)
+static uint8_t counters[PB_NUM] = {0};
 
 /*
     init_buttons()
@@ -43,11 +58,15 @@ void init_buttons(void){
     Debounces inputs on clock
 */
 void debounce(void){
+
+    /*
     static uint8_t counters[PB_NUM] = {0, 0, 0, 0}; // Array of counters for each button
 
-    pb_bm = (pb1_state & pb2_state & pb3_state & pb4_state);
-    pb_falling_edge = (VPORTA.IN) & ~pb_bm;
-    pb_rising_edge = ~(VPORTA.IN) & pb_bm;
+    current = VPORTA.IN;
+    prev = pb_bm;
+
+    pb_falling_edge = (prev & ~current);
+    pb_rising_edge = (~prev & current);
 
     uint8_t pb_samples[4] = {
         (VPORTA.IN & PIN4_bm),
@@ -67,12 +86,43 @@ void debounce(void){
             }
             else{ 
                 *p_state[i] = sample; // Update state
+                pb_bm ^= mask;
             }
         }
         else{
             counters[i] = 0; // Reset counter
         }
     }
+
+    */
+
+   uint8_t raw = VPORTA.IN;  // read all pins at once (active low)
+
+    // Debounce each button bit (4–7)
+    for (uint8_t i = 0; i < PB_NUM; i++) {
+        uint8_t mask = (1 << (i + 4));
+        uint8_t sample = (raw & mask) ? 1 : 0; // active low → pressed = 0
+        uint8_t stable = (pb_debounced_state & mask) ? 1 : 0;
+
+        if (sample != stable) {
+            if (++counters[i] >= MAX_COUNT) {
+                counters[i] = 0;
+                if (sample)
+                    pb_debounced_state |= mask;   // released
+                else
+                    pb_debounced_state &= ~mask;  // pressed
+            }
+        } else {
+            counters[i] = 0;
+        }
+    }
+
+    // Edge detection between two consecutive debounced snapshots
+    pb_previous_state = pb_current_state;
+    pb_current_state  = pb_debounced_state;
+
+    pb_falling_edge = pb_previous_state & ~pb_current_state; // press  (1→0)
+    pb_rising_edge  = ~pb_previous_state & pb_current_state; // release (0→1)
 }
 
 /*

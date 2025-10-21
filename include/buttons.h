@@ -11,7 +11,6 @@ extern uint8_t pb_rising_edge;
 
 void init_buttons(void);
 void debounce(void);
-void input(void);
 void clocked_input_handler(void);
 
 #endif

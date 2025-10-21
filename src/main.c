@@ -10,6 +10,14 @@
 
 #define PRNG_SEED 0x12024945
 
+#define DISP_1 0
+#define DISP_2 1
+#define DISP_3 2
+#define DISP_4 3
+#define DISP_CRCT 4
+#define DISP_INCT 5
+#define DISP_BLNK 6
+
 void state_machine(void);
 void display_sequence_element(uint8_t index);
 void toggle_output(bool_t b);
@@ -17,6 +25,8 @@ void toggle_output(bool_t b);
 static uint16_t sequence_length = 1; 
 static state_t state = GENERATE;
 static bool_t enable_output = FALSE;
+static uint8_t sequence_counter = 1; // Keep track of how far through the sequence we are
+static uint8_t input = 0;
 
 int main(void)
 {
@@ -61,17 +71,28 @@ void display_sequence_element(uint8_t index){
 
     switch (index)
     {
-    case 1:
+    case DISP_2:
         update_display(DISP_BAR_RIGHT, DISP_OFF);
         buzzer_emit(1);
         break;
-    case 2:
+    case DISP_3:
         update_display(DISP_OFF, DISP_BAR_LEFT);
         buzzer_emit(2);
         break;
-    case 3:
+    case DISP_4:
         update_display(DISP_OFF, DISP_BAR_RIGHT);
         buzzer_emit(3);
+        break;
+    case DISP_CRCT:
+        update_display(DISP_ON, DISP_ON); // Turn all on
+        buzzer_emit(0);
+        break;
+    case DISP_INCT:
+        update_display(DISP_DASH, DISP_DASH);
+        buzzer_emit(3);
+        break;
+    case DISP_BLNK:
+        update_display(DISP_OFF, DISP_OFF); // All off
         break;
     default:
         update_display(DISP_BAR_LEFT, DISP_OFF);
@@ -83,7 +104,6 @@ void display_sequence_element(uint8_t index){
 
 void state_machine(void)
 {
-    static uint8_t sequence_counter = 1; // Keep track of how far through the sequence we are
     while (1)
     {
         // Implement your main loop here
@@ -106,7 +126,7 @@ void state_machine(void)
                 toggle_output(FALSE); // Shutoff outputs
 
                 if(sequence_counter == sequence_length){
-                    sequence_counter = 0;
+                    sequence_counter = 1;
                     lfsr_seed(PRNG_SEED); // Reset seed back to start
                     state = INPUT_WAITING; // Start listening for inputs
                 }
@@ -117,25 +137,83 @@ void state_machine(void)
             }
             break;
         case INPUT_WAITING:
-            if(pb_falling_edge & (PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm)){
-                uint8_t pb_index = button_index(pb_falling_edge); // Find index of button pushed (Experimental)
+            if(pb_falling_edge & (PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm)){ // On push down
+                if (pb_falling_edge & PIN4_bm) {
+                    input = 0;
+                } else if (pb_falling_edge & PIN5_bm) {
+                    input = 1;
+                } else if (pb_falling_edge & PIN6_bm) {
+                    input = 2;
+                } else if (pb_falling_edge & PIN7_bm) {
+                    input = 3;
+                }
+
                 toggle_output(TRUE);
-                display_sequence_element(pb_index);
+                display_sequence_element(input);
                 state = INPUT_RECEIVED;
             }
             break;
         case INPUT_RECEIVED:
-            if(pb_rising_edge){
-                
+            if(pb_rising_edge & (1 << (input + 4))){ // On button lift
+                toggle_output(FALSE);
+                state = INPUT_EVALUATE;
             }
             break;
         case INPUT_EVALUATE:
+            elapsed_time = 0;
+
+            if(input == lfsr_next()){ // Seed has been reset, lets check
+                if(sequence_counter == sequence_length){
+                    toggle_output(TRUE); // Only display if we are at the end of the sequence
+                    display_sequence_element(DISP_CRCT); // Display correct
+
+                    toggle_elapse(TRUE); // Start counting
+
+                    sequence_counter = 1;
+                    lfsr_seed(PRNG_SEED); // Reset seed
+
+                    state = DISPLAY_SUCCESS;
+                }
+                else{
+                    sequence_counter++;
+                    state = INPUT_WAITING;
+                }
+            }
+            else{
+                toggle_output(TRUE); // Only display if we are at the end of the sequence
+                display_sequence_element(DISP_INCT); // Display incorrect
+
+                toggle_elapse(TRUE); // Start counting
+
+                sequence_counter = 1;
+                sequence_length = 1;
+                lfsr_seed(PRNG_SEED); // Reset seed
+
+                state = DISPLAY_FAILURE;
+            }
             break;
         case DISPLAY_SUCCESS:
+            if(elapsed_time >= playback_delay){
+                toggle_output(FALSE); // Turn off
+                toggle_elapse(FALSE);
+
+                elapsed_time = 0;
+                sequence_length++;
+                state = GENERATE;
+            }
             break;
         case DISPLAY_FAILURE:
+            if(elapsed_time >= playback_delay){
+                toggle_output(FALSE); // Turn off
+                toggle_elapse(FALSE);
+
+                elapsed_time = 0;
+                state = GENERATE;
+            }
             break;
         default:
+            state = GENERATE;
+            //lfsr_seed(PRNG_SEED);
             break;
         }
     }
