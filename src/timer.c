@@ -41,8 +41,10 @@ ISR(TCB1_INT_vect)
     }
 
     multiplex_displays(); // Drive displays
-    debounce(); // Debounce pushbuttons on clock
-    //clocked_input_handler(); // Clock dependant input handler
+
+    if(enable_input){
+        debounce(); // Debounce pushbuttons on clock
+    }
 
     TCB1.INTFLAGS = TCB_CAPT_bm;
 }

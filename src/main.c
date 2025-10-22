@@ -90,11 +90,9 @@ void display_sequence_element(uint8_t index){
         break;
     case DISP_CRCT:
         update_display(DISP_ON, DISP_ON); // Turn all on
-        buzzer_emit(0);
         break;
     case DISP_INCT:
         update_display(DISP_DASH, DISP_DASH);
-        buzzer_emit(3);
         break;
     case DISP_BLNK:
         update_display(DISP_OFF, DISP_OFF); // All off
@@ -127,21 +125,30 @@ void state_machine(void)
             break;
         case PROMPT:
             if(elapsed_time >= playback_delay){
-                toggle_elapse(FALSE); // Stop counting elapsed time
                 toggle_output(FALSE); // Shutoff outputs
 
                 if(sequence_counter == sequence_length){
-                    sequence_counter = 1;
-                    lfsr_seed(PRNG_SEED); // Reset seed back to start
-                    state = INPUT_WAITING; // Start listening for inputs
+                    if(elapsed_time >= (2 * playback_delay)){
+                        sequence_counter = 1;
+                        elapsed_time = 0;
+
+                        toggle_elapse(FALSE); // Stop counting elapsed time
+                        lfsr_seed(PRNG_SEED); // Reset seed back to start
+
+                        state = INPUT_WAITING; // Start listening for inputs
+                    }
                 }
                 else{
-                    sequence_counter++;
-                    state = GENERATE;
+                    if(elapsed_time >= (half_playback_delay + half_playback_delay)){
+                        sequence_counter++;
+                        state = GENERATE;
+                    }
                 }
             }
             break;
         case INPUT_WAITING:
+            toggle_input(TRUE);
+
             if(pb_falling_edge & 0xF0){ // On push down
                 uint8_t btn_bits = (pb_falling_edge & 0xF0) >> 4;
 
@@ -154,6 +161,7 @@ void state_machine(void)
 
                 toggle_output(TRUE);
                 toggle_elapse(TRUE);
+
                 elapsed_time = 0;
 
                 display_sequence_element(input);
@@ -162,13 +170,13 @@ void state_machine(void)
             break;
         case INPUT_RECEIVED:
             if(pb_rising_edge & (1 << (input + 4))){ // On button lift
-                if(elapsed_time >= half_playback_delay){ // Wait for elapse
+                if(elapsed_time >= playback_delay){ // Wait for elapse
                     toggle_output(FALSE);
                     state = INPUT_EVALUATE;
                 }
             }
             else if(pb_debounced_state & (1 << (input + 4))){ // Check if button not pushed down
-                if(elapsed_time >= half_playback_delay){ // Wait for elapse
+                if(elapsed_time >= playback_delay){ // Wait for elapse
                     toggle_output(FALSE);
                     state = INPUT_EVALUATE;
                 }
@@ -176,6 +184,8 @@ void state_machine(void)
             break;
         case INPUT_EVALUATE:
             elapsed_time = 0;
+
+            toggle_input(FALSE);
 
             if(input == lfsr_next()){ // Seed has been reset, lets check
                 if(sequence_counter == sequence_length){
@@ -198,6 +208,7 @@ void state_machine(void)
 
                 sequence_counter = 1;
                 sequence_length = 1;
+
                 lfsr_seed(PRNG_SEED); // Reset seed
 
                 state = DISPLAY_FAILURE;
@@ -230,6 +241,7 @@ void state_machine(void)
                 else{
                     toggle_output(FALSE); // Turn off
                     toggle_elapse(FALSE);
+                    
                     state = GENERATE;
                 }
                 
@@ -251,8 +263,8 @@ void state_machine(void)
             }
             break;
         default:
+            lfsr_seed(PRNG_SEED);
             state = GENERATE;
-            //lfsr_seed(PRNG_SEED);
             break;
         }
     }

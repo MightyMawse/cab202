@@ -4,6 +4,7 @@
 #include "display.h"
 #include "buzzer.h"
 #include "display_macros.h"
+#include "typedefs.h"
 
 #define MAX_COUNT 10
 #define PB_NUM 4
@@ -16,6 +17,7 @@ uint8_t pb_debounced_state = 0xFF;  // working copy during debounce
 uint8_t pb_falling_edge = 0x00;     // press (1→0)
 uint8_t pb_rising_edge  = 0x00;     // release (0→1)
 static uint8_t counters[PB_NUM] = {0};
+bool_t enable_input = FALSE;
 
 /*
     init_buttons()
@@ -69,12 +71,11 @@ void debounce(void){
 }
 
 /*
-    clocked_input_handler()
-    Clock driven input handler for pushbuttons
+    toggle_inputs()
+    Toggle the pushbuttons to save compute cycles
 */
-void clocked_input_handler(void){
-    
-
+void toggle_input(bool_t b){
+    enable_input = b;
 }
 
 /*
