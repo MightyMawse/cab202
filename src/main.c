@@ -7,6 +7,7 @@
 #include "buzzer.h"
 #include "buttons.h"
 #include "utils.h"
+#include "adc.h"
 
 #define PRNG_SEED 0x12024945
 
@@ -29,7 +30,6 @@ static uint8_t sequence_counter = 1; // Keep track of how far through the sequen
 static uint8_t input = 0;
 static uint8_t score = 0;
 static uint8_t high_score = 0;
-uint8_t half_playback_delay = 0;
 
 int main(void)
 {
@@ -41,10 +41,9 @@ int main(void)
     init_clock(); // Init program clock
     init_buzzer();
     init_buttons(); // Init push buttons
+    init_adc(); // Init potentiometer
 
     sei();
-    
-    half_playback_delay = (playback_delay / 2);
 
     lfsr_seed(PRNG_SEED);
     state_machine();
@@ -73,6 +72,8 @@ void toggle_output(bool_t b){
 void display_sequence_element(uint8_t index){
     if(enable_output == FALSE)
         return;
+
+    update_playback_delay();
 
     switch (index)
     {
@@ -124,11 +125,11 @@ void state_machine(void)
 
             break;
         case PROMPT:
-            if(elapsed_time >= playback_delay){
+            if(elapsed_time >= (playback_delay / 2)){
                 toggle_output(FALSE); // Shutoff outputs
 
                 if(sequence_counter == sequence_length){
-                    if(elapsed_time >= (2 * playback_delay)){
+                    if(elapsed_time >= playback_delay){ // Stay off
                         sequence_counter = 1;
                         elapsed_time = 0;
 
@@ -139,7 +140,7 @@ void state_machine(void)
                     }
                 }
                 else{
-                    if(elapsed_time >= (half_playback_delay + half_playback_delay)){
+                    if(elapsed_time >= playback_delay){ // Stay off
                         sequence_counter++;
                         state = GENERATE;
                     }
@@ -170,13 +171,13 @@ void state_machine(void)
             break;
         case INPUT_RECEIVED:
             if(pb_rising_edge & (1 << (input + 4))){ // On button lift
-                if(elapsed_time >= playback_delay){ // Wait for elapse
+                if(elapsed_time >= (playback_delay / 2)){ // Wait for elapse
                     toggle_output(FALSE);
                     state = INPUT_EVALUATE;
                 }
             }
             else if(pb_debounced_state & (1 << (input + 4))){ // Check if button not pushed down
-                if(elapsed_time >= playback_delay){ // Wait for elapse
+                if(elapsed_time >= (playback_delay / 2)){ // Wait for elapse
                     toggle_output(FALSE);
                     state = INPUT_EVALUATE;
                 }
@@ -241,7 +242,7 @@ void state_machine(void)
                 else{
                     toggle_output(FALSE); // Turn off
                     toggle_elapse(FALSE);
-                    
+
                     state = GENERATE;
                 }
                 
