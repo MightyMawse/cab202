@@ -7,7 +7,7 @@ void init_clock(void);
 void toggle_elapse(bool_t b);
 void update_playback_delay();
 
-static uint16_t score_board_delay = 5000; // 5s
+//static uint16_t score_board_delay = 5000; // 5s
 
 extern uint32_t elapsed_time;
 extern uint16_t playback_delay;

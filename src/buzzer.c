@@ -27,7 +27,12 @@ void init_buzzer(void) {
     Emits given frequency
 */
 void buzzer_emit(uint8_t index){
-    static const uint16_t per_values[4] = {E_HIGH_PER, CS_PER, A_PER, E_LOW_PER};
+    static const uint32_t per_values[4] = {
+        E_HIGH_PER * 2,
+        CS_PER * 2,
+        A_PER * 2,
+        E_LOW_PER * 2
+    };
 
     TCA0.SINGLE.PERBUF = per_values[index];
     TCA0.SINGLE.CMP0BUF = per_values[index] >> 1;

@@ -34,8 +34,18 @@ void get_segment_bits(int score, uint8_t* tens, uint8_t* ones){
     *ones = seg_digits[o];
 }
 
-void lfsr_seed(uint32_t seed){
+void lfsr_seed(uint32_t seed, uint32_t start_offset)
+{
     state_lfsr = seed;
+
+    // Advance the LFSR by `start_offset` steps
+    for (uint32_t i = 0; i < start_offset; i++) {
+        uint8_t bit = state_lfsr & 1;
+        state_lfsr >>= 1;
+        if (bit) {
+            state_lfsr ^= MASK;
+        }
+    }
 }
 
 uint8_t lfsr_next(void){

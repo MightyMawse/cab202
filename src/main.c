@@ -30,6 +30,7 @@ static uint8_t sequence_counter = 1; // Keep track of how far through the sequen
 static uint8_t input = 0;
 static uint8_t score = 0;
 static uint8_t high_score = 0;
+static uint8_t last_score = 0;
 
 int main(void)
 {
@@ -45,7 +46,7 @@ int main(void)
 
     sei();
 
-    lfsr_seed(PRNG_SEED);
+    lfsr_seed(PRNG_SEED, 0);
     state_machine();
 
     // The program should not reach this point
@@ -129,18 +130,18 @@ void state_machine(void)
                 toggle_output(FALSE); // Shutoff outputs
 
                 if(sequence_counter == sequence_length){
-                    if(elapsed_time >= playback_delay){ // Stay off
+                    if(elapsed_time >= playback_delay){ // Stay off for half playback delay
                         sequence_counter = 1;
                         elapsed_time = 0;
 
                         toggle_elapse(FALSE); // Stop counting elapsed time
-                        lfsr_seed(PRNG_SEED); // Reset seed back to start
+                        lfsr_seed(PRNG_SEED, last_score); // Reset seed back to start
 
                         state = INPUT_WAITING; // Start listening for inputs
                     }
                 }
                 else{
-                    if(elapsed_time >= playback_delay){ // Stay off
+                    if(elapsed_time >= playback_delay){ // Stay off for half playback delay
                         sequence_counter++;
                         state = GENERATE;
                     }
@@ -194,7 +195,7 @@ void state_machine(void)
                     display_sequence_element(DISP_CRCT); // Display correct
 
                     sequence_counter = 1;
-                    lfsr_seed(PRNG_SEED); // Reset seed
+                    lfsr_seed(PRNG_SEED, last_score); // Reset seed
 
                     state = DISPLAY_SUCCESS;
                 }
@@ -210,7 +211,7 @@ void state_machine(void)
                 sequence_counter = 1;
                 sequence_length = 1;
 
-                lfsr_seed(PRNG_SEED); // Reset seed
+                lfsr_seed(PRNG_SEED, last_score); // Reset seed
 
                 state = DISPLAY_FAILURE;
             }
@@ -245,7 +246,9 @@ void state_machine(void)
 
                     state = GENERATE;
                 }
-                
+
+                last_score = score + 1;
+                lfsr_seed(PRNG_SEED, last_score);
                 score = 0; // Reset score
             }
             break;
@@ -257,14 +260,14 @@ void state_machine(void)
             }
             break;
         case SCORE_TABLE:
-            if(elapsed_time >= score_board_delay){ // Wait 5s for score board
+            if(elapsed_time >= playback_delay){ // Wait 5s for score board
                 toggle_elapse(FALSE);
                 elapsed_time = 0;
                 state = GENERATE;
             }
             break;
         default:
-            lfsr_seed(PRNG_SEED);
+            lfsr_seed(PRNG_SEED, last_score);
             state = GENERATE;
             break;
         }

@@ -53,7 +53,7 @@ void toggle_elapse(bool_t b){
 ISR(TCB1_INT_vect)
 {
     if(enable_elapse_clock == TRUE){
-        elapsed_time += 5; // Increment by 5ms
+        elapsed_time += 2; // Increment by 5ms
     }
 
     multiplex_displays(); // Drive displays
